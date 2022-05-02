@@ -4,9 +4,25 @@ import 'package:flutter/material.dart';
 
 import 'circular_menu_item.dart';
 
+class CircularMenuController {
+  late AnimationController _animationController;
+
+  /// forward animation
+  void forwardAnimation() {
+    _animationController.forward();
+  }
+
+  /// reverse animation
+  void reverseAnimation() {
+    _animationController.reverse();
+  }
+}
+
 class CircularMenu extends StatefulWidget {
   /// use global key to control animation anywhere in the code
-  final GlobalKey<CircularMenuState>? key;
+  final Key? key;
+
+  final CircularMenuController? controller;
 
   /// list of CircularMenuItem contains at least two items.
   final List<CircularMenuItem> items;
@@ -19,6 +35,8 @@ class CircularMenu extends StatefulWidget {
 
   /// widget holds actual page content
   final Widget? backgroundWidget;
+
+  final Widget? toggleWidget;
 
   /// animation duration
   final Duration animationDuration;
@@ -37,7 +55,7 @@ class CircularMenu extends StatefulWidget {
   final double toggleButtonPadding;
   final double toggleButtonMargin;
   final Color? toggleButtonIconColor;
-  final AnimatedIconData toggleButtonAnimatedIconData;
+  final AnimatedIconData? toggleButtonAnimatedIconData;
 
   /// staring angle in clockwise radian
   final double? startingAngleInRadian;
@@ -54,6 +72,7 @@ class CircularMenu extends StatefulWidget {
     this.alignment = Alignment.bottomCenter,
     this.radius = 100,
     this.backgroundWidget,
+    this.toggleWidget,
     this.animationDuration = const Duration(milliseconds: 500),
     this.curve = Curves.bounceOut,
     this.reverseCurve = Curves.fastOutSlowIn,
@@ -64,12 +83,12 @@ class CircularMenu extends StatefulWidget {
     this.toggleButtonPadding = 10,
     this.toggleButtonSize = 40,
     this.toggleButtonIconColor,
+    this.controller,
     this.toggleButtonAnimatedIconData = AnimatedIcons.menu_close,
     this.key,
     this.startingAngleInRadian,
     this.endingAngleInRadian,
   })  : assert(items.isNotEmpty, 'items can not be empty list'),
-        assert(items.length > 1, 'if you have one item no need to use a Menu'),
         super(key: key);
 
   @override
@@ -85,16 +104,7 @@ class CircularMenuState extends State<CircularMenu>
   double? _startAngle;
   late int _itemsCount;
   late Animation<double> _animation;
-
-  /// forward animation
-  void forwardAnimation() {
-    _animationController.forward();
-  }
-
-  /// reverse animation
-  void reverseAnimation() {
-    _animationController.reverse();
-  }
+  late CircularMenuController _controller;
 
   @override
   void initState() {
@@ -105,6 +115,9 @@ class CircularMenuState extends State<CircularMenu>
     )..addListener(() {
         setState(() {});
       });
+
+    _controller = widget.controller ?? CircularMenuController();
+    _controller._animationController = _animationController;
     _animation = Tween(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
           parent: _animationController,
@@ -113,6 +126,22 @@ class CircularMenuState extends State<CircularMenu>
     );
     _itemsCount = widget.items.length;
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  /// forward animation
+  void forwardAnimation() {
+    _animationController.forward();
+  }
+
+  /// reverse animation
+  void reverseAnimation() {
+    _animationController.reverse();
   }
 
   void _configure() {
@@ -179,7 +208,7 @@ class CircularMenuState extends State<CircularMenu>
           _initialAngle = 0.5 * math.pi;
           break;
         default:
-          throw 'startingAngleInRadian and endingAngleInRadian can not be null';
+          throw 'startingAngleInRadian and endingAngleInRadian can not be null, eg (${widget.alignment.toString()})';
       }
     }
   }
@@ -226,6 +255,7 @@ class CircularMenuState extends State<CircularMenu>
         alignment: widget.alignment,
         child: CircularMenuItem(
           icon: null,
+          child: widget.toggleWidget,
           margin: widget.toggleButtonMargin,
           color: widget.toggleButtonColor ?? Theme.of(context).primaryColor,
           padding: (-_animation.value * widget.toggleButtonPadding * 0.5) +
@@ -239,13 +269,15 @@ class CircularMenuState extends State<CircularMenu>
             }
           },
           boxShadow: widget.toggleButtonBoxShadow,
-          animatedIcon: AnimatedIcon(
-            icon:
-                widget.toggleButtonAnimatedIconData, //AnimatedIcons.menu_close,
-            size: widget.toggleButtonSize,
-            color: widget.toggleButtonIconColor ?? Colors.white,
-            progress: _animation,
-          ),
+          animatedIcon: widget.toggleButtonAnimatedIconData == null
+              ? null
+              : AnimatedIcon(
+                  icon: widget
+                      .toggleButtonAnimatedIconData!, //AnimatedIcons.menu_close,
+                  size: widget.toggleButtonSize,
+                  color: widget.toggleButtonIconColor ?? Colors.white,
+                  progress: _animation,
+                ),
         ),
       ),
     );
@@ -260,11 +292,5 @@ class CircularMenuState extends State<CircularMenu>
         _buildMenuButton(context),
       ],
     );
-  }
-
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
   }
 }

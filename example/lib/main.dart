@@ -24,6 +24,10 @@ class _MyAppState extends State<MyApp> {
         ),
         body: CircularMenu(
           alignment: Alignment.bottomCenter,
+          toggleWidget: Container(
+            color: Colors.amber,
+          ),
+          toggleButtonIconColor: Colors.blue,
           backgroundWidget: Center(
             child: RichText(
               text: TextSpan(
@@ -39,7 +43,7 @@ class _MyAppState extends State<MyApp> {
               ),
             ),
           ),
-          toggleButtonColor: Colors.pink,
+          toggleButtonColor: Colors.transparent,
           items: [
             CircularMenuItem(
                 icon: Icons.home,
