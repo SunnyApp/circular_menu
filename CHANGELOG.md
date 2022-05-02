@@ -1,3 +1,7 @@
+## 1.3.0-dev.0
+
+ - **FEAT**: bumping version.
+
 ## [1.2.3]
 - fix Alignment issue, 14.7.2021.
 
